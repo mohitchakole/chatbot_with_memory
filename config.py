@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-LLM_PORVIDER = os.getenv("LLM_PROVIDER","ollama").lower().strip()
+LLM_PROVIDER = os.getenv("LLM_PROVIDER","ollama").lower().strip()
 
 OPENAI_API_KEY=os.getenv("OPENAI_API_KEY","")
 OPENAI_MODEL=os.getenv("OPENAI_MODEL","gpt-40-mini")
@@ -21,11 +21,11 @@ SUPPORTED_PROVIDER = ["openai","gemini","ollama"]
 def get_configuration_error()-> str|None:
     if LLM_PROVIDER not in SUPPORTED_PROVIDER:
         return(F"LLM_PROVIDER is '{LLM_PROVIDER}' which is not supported")
-    if LLM_PROVIDER = "openai" and not OPENAI_API_KEY:
+    if LLM_PROVIDER == "openai" and not OPENAI_API_KEY:
         return "OPENAI_API_KEY is missing , add it to your .env"   
-    if LLM_PROVIDER = "gemini" and not GEMINI_API_KEY:
+    if LLM_PROVIDER == "gemini" and not GEMINI_API_KEY:
         return "GEMINI_API_KEY is missing , add it to your .env"
-        if LLM_PROVIDER == "ollama" and not OLLAMA_BASE_URL:
+    if LLM_PROVIDER == "ollama" and not OLLAMA_BASE_URL:
         return "OLLAMA_BASE_URL is missing, add it to your .env"
 
     return None           
