@@ -1,25 +1,25 @@
 import requests 
 import config
 
-def get_llm_response(message: list[dict])->str:
+def get_llm_response(messages: list[dict])->str:
     if config.LLM_PROVIDER == "openai":
-        return ask_openai(message)
+        return ask_openai(messages)
        
     if config.LLM_PROVIDER == "gemini":
-         return ask_gemini(message)
+         return ask_gemini(messages)
 
     if config.LLM_PROVIDER == "ollama":
-        return ask_ollama(message)
+        return ask_ollama(messages)
 
     raise RuntimeError(
-        f"Unsupported LLM_PROVIDER: {config.LLM_PORVIDER}, Please use one of :{', '.join(config.SUPPORTED_PROVIDER)}"
+        f"Unsupported LLM_PROVIDER: {config.LLM_PROVIDER}, Please use one of :{', '.join(config.SUPPORTED_PROVIDER)}"
     )             
 
 def ask_openai(messages:list[dict])->str:
     if not config.OPENAI_API_KEY:
         raise RuntimeError("OPEN_API_KEY is missing please add it to your .env")
 
-    from openai import OPENAI
+    from openai import OpenAI
 
     client = OpenAI(api_key=config.OPENAI_API_KEY)
 
@@ -31,7 +31,7 @@ def ask_openai(messages:list[dict])->str:
     except Exception as e :
         raise RuntimeError(F"OpenAI request failed: {e}")
 
-    return response.choices[0].messages
+    return response.choices[0].message.content
     
 def ask_gemini(messages: list[dict])->str:
     if not config.GEMINI_API_KEY:
@@ -42,13 +42,13 @@ def ask_gemini(messages: list[dict])->str:
     system_instruction = ""
     contents = []
 
-    for messages in messages :
+    for message in messages :
         if message["role"] == "system":
-            system_instruction = messages["content"]
+            system_instruction = message["content"]
         else:
             gemini_role = "model" if message["role"] == "assistant" else "user"
             contents.append(
-                {"role" : gemini_role, "parts": [{"text": messages["content"]}]}
+                {"role" : gemini_role, "parts": [{"text": message["content"]}]}
             )   
 
     generation_setting = None
@@ -58,22 +58,22 @@ def ask_gemini(messages: list[dict])->str:
     client = genai.Client(api_key=config.GEMINI_API_KEY)
     try:
         reponse=client.models.generate_content(
-            model = config.GEMINI_API_KEY,
+            model = config.GEMINI_MODEL,
             contents=contents,
             config=generation_setting,
         )    
     except Exception as error:
         raise RuntimeError(f"Gemini request failed : {error}")
 
-    return reponsbe.txt
+    return response.text
 
-def ask_ollama(message: list[dict])-> str:
+def ask_ollama(messages: list[dict])-> str:
     url = f"{config.OLLAMA_BASE_URL}/api/chat"
 
     payload = {
-        "model" : config.OLLAMA_BASE_URL,
+        "model" : config.OLLAMA_MODEL,
         "messages": messages,
-        "steam": False,
+        "stream": False,
     }    
 
     try:
@@ -86,4 +86,4 @@ def ask_ollama(message: list[dict])-> str:
     except Exception as error:
         raise RuntimeError(f"Ollama request failed : {error}")
 
-    return response.josn()["messages"]["content"]
+    return response.json()["message"]["content"]
